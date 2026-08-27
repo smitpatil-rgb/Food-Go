@@ -4,11 +4,15 @@ Food.Go is a restaurant ordering application starter built with Next.js App Rout
 
 > This is a demonstration/application starter, not a production-readiness guarantee. Payments are cash or UPI on delivery; no online payment gateway is connected.
 
-## Upload to GitHub
+## GitHub and deployment
 
-Follow [GITHUB_UPLOAD.md](GITHUB_UPLOAD.md). Upload the extracted project files, not just the ZIP. The active app is in `src/`; obsolete static HTML/CSS and duplicate root images were omitted from this GitHub edition. The original project remains separate.
+This repository contains the complete Food.Go application source.
 
-Publishing the source is not the same as deploying a working site. [GitHub Pages hosts static files](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), so it cannot run this app's server routes or PostgreSQL-backed ordering system. A live site needs a Next.js-capable host and PostgreSQL.
+Publishing the source on GitHub is not the same as deploying a working website. GitHub Pages is intended for static sites and cannot run this application's Next.js server routes or PostgreSQL-backed ordering system.
+
+To run Food.Go as a live website, deploy it to a Next.js-capable hosting provider and connect it to PostgreSQL.
+
+For instructions on manually uploading the project files to GitHub, see [GITHUB_UPLOAD.md](GITHUB_UPLOAD.md).
 
 ## Architecture
 
