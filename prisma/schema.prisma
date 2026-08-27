@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StaffRole {
+  OWNER
+  MANAGER
+  KITCHEN
+}
+
+enum OrderStatus {
+  CONFIRMED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  UPI_ON_DELIVERY
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Staff {
+  id           String          @id @default(cuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         StaffRole       @default(MANAGER)
+  active       Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  auditLogs    AdminAuditLog[]
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  sortOrder Int        @default(0)
+  menuItems MenuItem[]
+}
+
+model MenuItem {
+  id              String      @id @default(cuid())
+  name            String
+  slug            String      @unique
+  description     String
+  priceMinor      Int
+  imageUrl        String
+  dietaryLabels   String[]
+  ratingHundredths Int        @default(450)
+  prepMinutes     Int
+  featured        Boolean     @default(false)
+  active          Boolean     @default(true)
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  orderItems      OrderItem[]
+  reviews         Review[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([active, featured])
+  @@index([categoryId])
+}
+
+model Order {
+  id              String             @id @default(cuid())
+  orderNumber     String             @unique
+  customerName    String
+  phone           String
+  email           String?
+  deliveryAddress String
+  notes           String?
+  paymentMethod   PaymentMethod
+  status          OrderStatus        @default(CONFIRMED)
+  subtotalMinor   Int
+  deliveryFeeMinor Int
+  taxMinor        Int
+  totalMinor      Int
+  idempotencyKey  String             @unique
+  items           OrderItem[]
+  statusEvents    OrderStatusEvent[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([phone, orderNumber])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  menuItemId   String
+  nameSnapshot String
+  priceMinor   Int
+  quantity     Int
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model OrderStatusEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  authorName String
+  rating     Int
+  body       String
+  status     ReviewStatus @default(PENDING)
+  menuItemId String?
+  menuItem   MenuItem?    @relation(fields: [menuItemId], references: [id])
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  staffId    String
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  staff      Staff    @relation(fields: [staffId], references: [id])
+
+  @@index([staffId, createdAt])
+}
+
+model RestaurantSettings {
+  id               String   @id @default("primary")
+  restaurantName   String   @default("Food.Go")
+  deliveryFeeMinor Int      @default(4900)
+  taxBasisPoints   Int      @default(500)
+  currency         String   @default("INR")
+  updatedAt        DateTime @updatedAt
+}
